@@ -1,0 +1,19 @@
+workflows:
+  atlas-r8-debug:
+    name: ATLAS R8 private debug APK
+    max_build_duration: 120
+    instance_type: linux_x2
+    environment:
+      vars:
+        ANDROID_SDK_ROOT: /opt/android-sdk
+    scripts:
+      - name: Extract ATLAS R8 Android project
+        script: unzip -oq ATLAS_R8_PRIVATE_GITHUB_BUILD_READY.zip -d .
+      - name: Validate source and JavaScript
+        script: bash scripts/build-r8-private.sh --source-check-only
+      - name: Build and verify debug APK
+        script: bash scripts/build-r8-private.sh
+    artifacts:
+      - ATLAS_ONE_R8_PRIVATE_DEBUG_TEST.apk
+      - ATLAS_ONE_R8_PRIVATE_DEBUG_TEST.apk.sha256
+      - app/build/outputs/**/*.apk.badging.txt
