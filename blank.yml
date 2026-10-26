@@ -1,0 +1,55 @@
+name: ATLAS R8 Android Debug APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Require uploaded source package
+        run: test -s ATLAS_R8_PRIVATE_GITHUB_BUILD_READY.zip
+
+      - name: Extract ATLAS R8 source package
+        run: unzip -oq ATLAS_R8_PRIVATE_GITHUB_BUILD_READY.zip -d .
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Install Android SDK 35
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses >/dev/null || true
+
+      - name: Build and verify R8 debug APK
+        run: bash scripts/build-r8-private.sh
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ATLAS-R8-private-debug-test-not-production
+          path: |
+            ATLAS_ONE_R8_PRIVATE_DEBUG_TEST.apk
+            ATLAS_ONE_R8_PRIVATE_DEBUG_TEST.apk.sha256
+          if-no-files-found: error
+          retention-days: 3
